@@ -2,5 +2,5 @@
 
 from time import sleep
 
-def wait():
-	sleep(10)
+def idle():
+	sleep(4294967)
