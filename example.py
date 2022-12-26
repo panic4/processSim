@@ -1,6 +1,8 @@
-#file containing example functions to import into processSim
-
+#file containing an example function to import into processSim
 from time import sleep
 
-def idle():
-	sleep(4294967)
+def idle(arg):
+	try:
+		sleep(arg)
+	except:
+		print('example.idle error: invalid argument')
