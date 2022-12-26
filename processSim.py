@@ -1,13 +1,15 @@
 from multiprocessing import Process,set_start_method
-from cmd import Cmd
+import cmd
 
-class t(Cmd):
+class t(cmd.Cmd):
 	intro='                                         _______ __\n.-----.----.-----.----.-----.-----.-----|     __|__|--------.\n|  _  |   _|  _  |  __|  -__|__ --|__ --|__     |  |        |\n|   __|__| |_____|____|_____|_____|_____|_______|__|__|__|__|\n|__|						by panic\n'
 	prompt='pSim>'
+	ruler=None
 	importlist=[] #list of user-imported modules
 	pdict={} #dictionary of user-defined processes
 
-	def do_import(self,arg): #command to import modules import arg[0] from arg[2]
+	def do_import(self,arg):
+		'''Imports modules.\nUsage: import [module]; import [module] as [alias]'''
 		arg=str.split(arg)
 		try:
 			if len(arg)==1:
@@ -19,17 +21,20 @@ class t(Cmd):
 			else:
 				print('Error: invalid syntax')
 		except:
-			print('Error: module ',arg[0],' does not exist')
+			print('Error: module',arg[0],'does not exist or has already been imported')
 		
-	def do_importlist(self,arg): #displays list of imported modules
+	def do_importlist(self,arg):
+		'''Displays list of user-imported modules.\nUsage: importlist'''
 		for i in t.importlist:
 			print(i)
 
-	def do_plist(self,arg): #displays list of user-defined processes
+	def do_processlist(self,arg):
+		'''Displays list of processes defined using the create command.\nUsage: processlist'''
 		for i in t.pdict:
 			print(i)
 			
-	def do_create(self,arg): #command to define a process as an imported function--no support for arguments
+	def do_create(self,arg):
+		'''Defines a process as a user-imported method.\nUsage: create [method]; create [method] as [process name]'''
 		arg=str.split(arg)
 		try:
 			if len(arg)==1:
@@ -39,48 +44,62 @@ class t(Cmd):
 			else:
 				print('Error: invalid syntax')
 		except:
-			print('Error: function ',arg[0],' does not exist')
+			print('Error: function',arg[0],'does not exist')
 	
-	def do_start(self,arg): #starts a new user-defined process
+	def do_start(self,arg):
+		'''Starts a new user-defined process.\nUsage: start [process name]'''
 		if arg in t.pdict:
 			try:
 				t.pdict[arg].start()
 			except:
-				print('Error: process',arg,' already started')
+				print('Error: process',arg,'already started')
 		else:
-			print('Error: process ',arg,' not created')
+			print('Error: process',arg,'not created')
 			
-	def do_kill(self,arg): #kills a process
+	def do_kill(self,arg):
+		'''Kills a process.\nUsage: kill [process name]'''
 		if arg in t.pdict:
 			try:
 				t.pdict[arg].terminate()
 			except:
-				print('Error: process ',arg,' is not alive')
+				print('Error: process',arg,'is not alive')
 		else:
-			print('Error: process ',arg,' not created')
+			print('Error: process',arg,'not created')
 	
 	def do_close(self,arg):
+		'''Closes a process and releases its resources.\nUsage: close [process name]'''
 		if arg in t.pdict:
 			try:
 				t.pdict[arg].close()
+				del t.pdict[arg]
 			except:
-				print('Error: process ',arg,' is running')
+				print('Error: process',arg,'is running')
 		else:
-			print('Error: process ',arg,' not created')
+			print('Error: process',arg,'not created')
 
-	def do_status(self,arg): #displays process' alive status and PID
+	def do_status(self,arg):
+		'''Displays a process' alive status and PID.\nUsage: status [process name]'''
 		if arg in t.pdict:
-			print('Alive: ',t.pdict[arg].is_alive(),'\nPID: ',t.pdict[arg].pid)
+			try:
+				print('Running:',t.pdict[arg].is_alive(),'\nPID:',t.pdict[arg].pid)
+			except:
+				print('Error: process is closed')
+		else:
+			print('Error: process',arg,'not created')
 	
-	def do_exec(self,arg): #executes python code during runtime for debug purposes
-		try:
-			exec(arg)
-		except:
-			print('Error: Exec failed')
+	def do_shell(self,arg):
+		'''Executes Python code during runtime.\nUsage: shell [argument]; ![argument]'''
+		exec(arg)
 	
-	def do_exit(self,arg): #quits pSim
+	def do_exit(self,arg):
+		'''Kills all processes and quits processSim.\nUsage: exit'''
+		for i in t.pdict:
+			t.do_kill(self,i)
 		exit()
 
 if __name__=='__main__':
 	set_start_method('spawn')
-	t().cmdloop()
+	try:
+		t().cmdloop()
+	except:
+		t.do_exit(None,None)
